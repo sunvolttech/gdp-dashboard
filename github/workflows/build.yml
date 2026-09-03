@@ -1,0 +1,91 @@
+name: Build All SunVolt Apps
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev mathomatic default-jdk libspatialindex-dev
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.36 virtualenv
+
+      # ----------------------------------------------------
+      # 1. GINA MANHAJAR MANAGER (ADMIN APP)
+      # ----------------------------------------------------
+      - name: Build Manager App
+        run: |
+          cp manager_app.py main.py
+          echo '[app]' > buildozer.spec
+          echo 'title = SunVolt Manager' >> buildozer.spec
+          echo 'package.name = sunvoltmanager' >> buildozer.spec
+          echo 'package.domain = com.sunvolt' >> buildozer.spec
+          echo 'source.dir = .' >> buildozer.spec
+          echo 'source.include_exts = py,png,jpg,kv,atlas' >> buildozer.spec
+          echo 'version = 1.0.0' >> buildozer.spec
+          echo 'requirements = python3==3.11.5,kivy' >> buildozer.spec
+          echo 'orientation = portrait' >> buildozer.spec
+          echo 'android.archs = arm64-v8a, armeabi-v7a' >> buildozer.spec
+          echo 'android.allow_root = 1' >> buildozer.spec
+          buildozer -v android debug
+          mv bin/*.apk bin/SunVolt_Manager.apk
+          rm main.py buildozer.spec
+
+      # ----------------------------------------------------
+      # 2. GINA MANHAJAR STORE KEEPER
+      # ----------------------------------------------------
+      - name: Build Store Keeper App
+        run: |
+          cp store_keeper.py main.py
+          echo '[app]' > buildozer.spec
+          echo 'title = SunVolt Store' >> buildozer.spec
+          echo 'package.name = sunvoltstore' >> buildozer.spec
+          echo 'package.domain = com.sunvolt' >> buildozer.spec
+          echo 'source.dir = .' >> buildozer.spec
+          echo 'source.include_exts = py,png,jpg,kv,atlas' >> buildozer.spec
+          echo 'version = 1.0.0' >> buildozer.spec
+          echo 'requirements = python3==3.11.5,kivy' >> buildozer.spec
+          echo 'orientation = portrait' >> buildozer.spec
+          echo 'android.archs = arm64-v8a, armeabi-v7a' >> buildozer.spec
+          echo 'android.allow_root = 1' >> buildozer.spec
+          buildozer -v android debug
+          mv bin/*-debug.apk bin/SunVolt_Store.apk || mv bin/*debug*.apk bin/SunVolt_Store.apk
+          rm main.py buildozer.spec
+
+      # ----------------------------------------------------
+      # 3. GINA MANHAJAR AGENT
+      # ----------------------------------------------------
+      - name: Build Agent App
+        run: |
+          cp agent_app.py main.py
+          echo '[app]' > buildozer.spec
+          echo 'title = SunVolt Agent' >> buildozer.spec
+          echo 'package.name = sunvoltagent' >> buildozer.spec
+          echo 'package.domain = com.sunvolt' >> buildozer.spec
+          echo 'source.dir = .' >> buildozer.spec
+          echo 'source.include_exts = py,png,jpg,kv,atlas' >> buildozer.spec
+          echo 'version = 1.0.0' >> buildozer.spec
+          echo 'requirements = python3==3.11.5,kivy' >> buildozer.spec
+          echo 'orientation = portrait' >> buildozer.spec
+          echo 'android.archs = arm64-v8a, armeabi-v7a' >> buildozer.spec
+          echo 'android.allow_root = 1' >> buildozer.spec
+          buildozer -v android debug
+          mv bin/*-debug.apk bin/SunVolt_Agent.apk || mv bin/*debug*.apk bin/SunVolt_Agent.apk
+
+      # ----------------------------------------------------
+      # 4. TURA DUKKAN APPS GUDA 3 WURIN SAUKEWA
+      # ----------------------------------------------------
+      - name: Upload All APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: SunVolt-Complete-APKs
+          path: bin/*.apk
